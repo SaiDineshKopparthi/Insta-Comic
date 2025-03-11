@@ -5,6 +5,7 @@ require("dotenv").config();
 const router = express.Router();
 
 const TOGETHER_API_KEY = process.env.TOGETHER_API_KEY;
+const DEEP_AI_API_KEY = process.env.DEEP_AI_API_KEY;
 
 router.post("/generate-story", async (req, res) => {
   const { prompt } = req.body;
@@ -37,13 +38,34 @@ router.post("/generate-story", async (req, res) => {
 
     res.json({ prompt, script });
   } catch (error) {
-    console.error("AI Error:",   error);
+    console.error("AI Error:", error);
     res.status(500).json({ error: "Failed to generate story" });
   }
 });
 
 router.post("/generate-images", async (req, res) => {
-  return res.json({ message: "Image generation not implemented yet" });
+  const { prompt } = req.body;
+  if (!prompt) return res.status(400).json({ error: "Missing prompt" });
+
+  try {
+    const response = await axios.post(
+      "https://api.deepai.org/api/text2img",
+      {
+        text: prompt,
+      },
+      {
+        headers: {
+          "api-key": DEEP_AI_API_KEY,
+        },
+      }
+    );
+
+    console.log(response.data);
+    res.json(response.data);
+  } catch (error) {
+    console.error("Image Generation Error:", error);
+    res.status(500).json({ error: "Failed to generate image" });
+  }
 });
 
 module.exports = router;
